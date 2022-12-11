@@ -589,6 +589,7 @@ def prepare(args):
     #    args.n_gpu = 1
     device = torch.device(
         "cuda" if torch.cuda.is_available() else "cpu")
+    args.n_gpu = 1
     args.device = device
 
     # Setup logging
