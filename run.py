@@ -577,15 +577,18 @@ def prepare(args):
     json.dump(args.__dict__, open(os.path.join(
         args.output_dir, 'train_opt.json'), 'w'), sort_keys=True, indent=2)
 
+    # TODO changed from:
     # Setup CUDA, GPU & distributed training
-    if args.local_rank == -1 or args.no_cuda:
-        device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
-        args.n_gpu = torch.cuda.device_count()
-    else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
-        torch.cuda.set_device(args.local_rank)
-        device = torch.device("cuda", args.local_rank)
-        torch.distributed.init_process_group(backend='nccl')
-        args.n_gpu = 1
+    #if args.local_rank == -1 or args.no_cuda:
+    #    device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
+    #    args.n_gpu = torch.cuda.device_count()
+    #else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
+    #    torch.cuda.set_device(args.local_rank)
+    #    device = torch.device("cuda", args.local_rank)
+    #    torch.distributed.init_process_group(backend='nccl')
+    #    args.n_gpu = 1
+    device = torch.device(
+        "cuda" if torch.cuda.is_available() else "cpu")
     args.device = device
 
     # Setup logging
