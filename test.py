@@ -133,9 +133,7 @@ def main(flags=None):
 
     device = torch.device(
         "cuda" if torch.cuda.is_available() else "cpu")
-    # TODO changed from:
-    # n_gpu = torch.cuda.device_count()
-    n_gpu = 1
+    n_gpu = torch.cuda.device_count()
 
     if args.seed > 0:
         random.seed(args.seed)
