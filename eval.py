@@ -2,6 +2,8 @@
 # coding:utf-8
 
 import numpy as np
+from sklearn.metrics import f1_score
+from sklearn.preprocessing import MultiLabelBinarizer
 
 
 def _precision_recall_f1(right, predict, total):
@@ -19,6 +21,7 @@ def _precision_recall_f1(right, predict, total):
     if p + r > 0:
         f = p * r * 2 / (p + r)
     return p, r, f
+
 
 def evaluate(epoch_predicts, epoch_labels, id2label, threshold=0.5, top_k=None, as_sample=False):
     """
@@ -99,7 +102,24 @@ def evaluate(epoch_predicts, epoch_labels, id2label, threshold=0.5, top_k=None, 
     # Micro-F1
     precision_micro = float(right_total) / predict_total if predict_total > 0 else 0.0
     recall_micro = float(right_total) / gold_total
-    micro_f1 = 2 * precision_micro * recall_micro / (precision_micro + recall_micro) if (precision_micro + recall_micro) > 0 else 0.0
+    micro_f1 = 2 * precision_micro * recall_micro / (precision_micro + recall_micro) if (
+                                                                                                    precision_micro + recall_micro) > 0 else 0.0
+
+    # TODO region changed from original:
+    # sklearn metrics
+    # calc f1 with sklearn
+    mlb = MultiLabelBinarizer()
+    y_true = mlb.fit_transform(epoch_gold)
+    y_pred = mlb.fit_transform(epoch_predicts)
+    skl_micro_f1 = f1_score(y_true, y_pred, average='micro')
+    skl_macro_f1 = f1_score(y_true, y_pred, average='macro')
+    skl_samples_f1 = f1_score(y_true, y_pred, average='samples')
+
+    print(mlb.classes_.shape)
+    print(f'f1_score: micro (sklearn): {skl_micro_f1}, macro: {skl_macro_f1}, samples: {skl_samples_f1}')
+    print(f'f1_score (HBGL): micro: {micro_f1}, macro: {macro_f1}')
+
+    # endregion
 
     return {'precision': precision_micro,
             'recall': recall_micro,
@@ -120,24 +140,22 @@ def evaluate_seq2seq(batch_predicts, batch_labels, id2label):
         _type_: _description_ return de micro,macro,precision and recall
     """
     assert len(batch_predicts) == len(batch_labels), 'mismatch between prediction and ground truth for evaluation'
-    np_pred, np_labels = np.array(batch_predicts),np.array(batch_labels)
-    np_right = np.bitwise_and(np_pred,np_labels)
-    #[1]是True的索引,[0]是batch的索引，使用[1]就足够了
+    np_pred, np_labels = np.array(batch_predicts), np.array(batch_labels)
+    np_right = np.bitwise_and(np_pred, np_labels)
+    # [1]是True的索引,[0]是batch的索引，使用[1]就足够了
     pred_label_id = np.nonzero(np_pred)[1].tolist()
     labels_label_id = np.nonzero(np_labels)[1].tolist()
     right_label_id = np.nonzero(np_right)[1].tolist()
-    
+
     # initialize confusion matrix
     confusion_count_list = [[0 for _ in range(len(id2label))] for _ in range(len(id2label))]
     right_count_list = [0 for _ in range(len(id2label))]
     gold_count_list = [0 for _ in range(len(id2label))]
     predicted_count_list = [0 for _ in range(len(id2label))]
-    
-    for x in pred_label_id :predicted_count_list[x]+=1
-    for x in labels_label_id :gold_count_list[x]+=1
-    for x in right_label_id:right_count_list[x]+=1
-    
 
+    for x in pred_label_id: predicted_count_list[x] += 1
+    for x in labels_label_id: gold_count_list[x] += 1
+    for x in right_label_id: right_count_list[x] += 1
 
     precision_dict = dict()
     recall_dict = dict()
@@ -160,7 +178,8 @@ def evaluate_seq2seq(batch_predicts, batch_labels, id2label):
     # Micro-F1
     precision_micro = float(right_total) / predict_total if predict_total > 0 else 0.0
     recall_micro = float(right_total) / gold_total
-    micro_f1 = 2 * precision_micro * recall_micro / (precision_micro + recall_micro) if (precision_micro + recall_micro) > 0 else 0.0
+    micro_f1 = 2 * precision_micro * recall_micro / (precision_micro + recall_micro) if (
+                                                                                                    precision_micro + recall_micro) > 0 else 0.0
 
     return {'precision': precision_micro,
             'recall': recall_micro,
