@@ -3,7 +3,6 @@
 
 import numpy as np
 from sklearn.metrics import f1_score
-from sklearn.preprocessing import MultiLabelBinarizer
 
 
 def _precision_recall_f1(right, predict, total):
@@ -103,20 +102,29 @@ def evaluate(epoch_predicts, epoch_labels, id2label, threshold=0.5, top_k=None, 
     precision_micro = float(right_total) / predict_total if predict_total > 0 else 0.0
     recall_micro = float(right_total) / gold_total
     micro_f1 = 2 * precision_micro * recall_micro / (precision_micro + recall_micro) if (
-                                                                                                    precision_micro + recall_micro) > 0 else 0.0
+                                                                                                precision_micro + recall_micro) > 0 else 0.0
 
     # TODO region changed from original:
     # sklearn metrics
-    # calc f1 with sklearn
-    mlb = MultiLabelBinarizer()
-    y_true = mlb.fit_transform(epoch_gold)
-    y_pred = mlb.fit_transform(epoch_predicts)
-    skl_micro_f1 = f1_score(y_true, y_pred, average='micro')
-    skl_macro_f1 = f1_score(y_true, y_pred, average='macro')
-    skl_samples_f1 = f1_score(y_true, y_pred, average='samples')
+    # calc f1 with sklearn for multilabel classification
 
-    print(mlb.classes_.shape)
-    print(f'f1_score: micro (sklearn): {skl_micro_f1}, macro: {skl_macro_f1}, samples: {skl_samples_f1}')
+    # flatten the list
+    epoch_predicts = [item for sublist in epoch_predicts for item in sublist]
+    epoch_labels = [item for sublist in epoch_labels for item in sublist]
+
+    # convert to numpy array
+    epoch_predicts = np.array(epoch_predicts)
+    epoch_labels = np.array(epoch_labels)
+
+    # convert to binary
+    epoch_predicts = np.where(epoch_predicts > threshold, 1, 0)
+
+    # calc f1
+    skl_micro_f1 = f1_score(epoch_labels, epoch_predicts, average='micro')
+    skl_macro_f1 = f1_score(epoch_labels, epoch_predicts, average='macro')
+
+    print('sklearn micro f1: ', skl_micro_f1)
+    print('sklearn macro f1: ', skl_macro_f1)
     print(f'f1_score (HBGL): micro: {micro_f1}, macro: {macro_f1}')
 
     # endregion
@@ -179,7 +187,7 @@ def evaluate_seq2seq(batch_predicts, batch_labels, id2label):
     precision_micro = float(right_total) / predict_total if predict_total > 0 else 0.0
     recall_micro = float(right_total) / gold_total
     micro_f1 = 2 * precision_micro * recall_micro / (precision_micro + recall_micro) if (
-                                                                                                    precision_micro + recall_micro) > 0 else 0.0
+                                                                                                precision_micro + recall_micro) > 0 else 0.0
 
     return {'precision': precision_micro,
             'recall': recall_micro,
