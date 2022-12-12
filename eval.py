@@ -2,7 +2,8 @@
 # coding:utf-8
 
 import numpy as np
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, accuracy_score
+from sklearn.preprocessing import MultiLabelBinarizer
 
 
 def _precision_recall_f1(right, predict, total):
@@ -51,8 +52,25 @@ def evaluate(epoch_predicts, epoch_labels, id2label, threshold=0.5, top_k=None, 
     right_count_list = [0 for _ in range(len(id2label))]
     gold_count_list = [0 for _ in range(len(id2label))]
     predicted_count_list = [0 for _ in range(len(id2label))]
+    # TODO added
+    total_predict_label_list = []
 
     for sample_predict, sample_gold in zip(epoch_predicts, epoch_gold):
+        # region TODO added
+        np_sample_predict = np.array(sample_predict, dtype=np.float32)
+        sample_predict_descent_idx = np.argsort(-np_sample_predict)
+        sample_predict_id_list = []
+        if top_k is None:
+            top_k = len(sample_predict)
+        for j in range(top_k):
+            if np_sample_predict[sample_predict_descent_idx[j]] > threshold:
+                sample_predict_id_list.append(sample_predict_descent_idx[j])
+
+        sample_predict_label_list = [id2label[i] for i in sample_predict_id_list]
+
+        total_predict_label_list.append(sample_predict_label_list)
+        # endregion
+
         if as_sample:
             sample_predict_id_list = sample_predict
         else:
@@ -106,25 +124,30 @@ def evaluate(epoch_predicts, epoch_labels, id2label, threshold=0.5, top_k=None, 
 
     # TODO region changed from original:
     # sklearn metrics
-    # calc f1 with sklearn for multilabel classification
+    # calc metrics with sklearn for multilabel classification
 
-    # flatten the list
-    epoch_predicts = [item for sublist in epoch_predicts for item in sublist]
-    epoch_labels = [item for sublist in epoch_labels for item in sublist]
+    epoch_gold_label = list()
+    # get id label name of ground truth
+    for sample_labels in epoch_labels:
+        sample_gold = []
+        for label in sample_labels:
+            assert label in id2label.keys(), print(label)
+            sample_gold.append(id2label[label])
+        epoch_gold_label.append(sample_gold)
 
-    # convert to numpy array
-    epoch_predicts = np.array(epoch_predicts)
-    epoch_labels = np.array(epoch_labels)
+    print(epoch_labels)
+    print(epoch_predicts)
 
-    # convert to binary
-    epoch_predicts = np.where(epoch_predicts > threshold, 1, 0)
+    mlb = MultiLabelBinarizer()
+    y_true = mlb.fit_transform(epoch_gold_label)
+    y_pred = mlb.transform(total_predict_label_list)
+    skl_micro_f1 = f1_score(y_true, y_pred, average='micro')
+    skl_macro_f1 = f1_score(y_true, y_pred, average='macro')
+    skl_samples_f1 = f1_score(y_true, y_pred, average='samples')
+    skl_accuracy = accuracy_score(y_true, y_pred)
 
-    # calc f1
-    skl_micro_f1 = f1_score(epoch_labels, epoch_predicts, average='micro')
-    skl_macro_f1 = f1_score(epoch_labels, epoch_predicts, average='macro')
-
-    print('sklearn micro f1: ', skl_micro_f1)
-    print('sklearn macro f1: ', skl_macro_f1)
+    print(
+        f'skl_micro_f1: {skl_micro_f1}, skl_macro_f1: {skl_macro_f1}, skl_samples_f1: {skl_samples_f1}, skl_accuracy: {skl_accuracy}')
     print(f'f1_score (HBGL): micro: {micro_f1}, macro: {macro_f1}')
 
     # endregion
