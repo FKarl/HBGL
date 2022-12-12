@@ -63,6 +63,7 @@ def evaluate(epoch_predicts, epoch_labels, id2label, threshold=0.5, top_k=None, 
         if top_k is None:
             top_k = len(sample_predict)
         for j in range(top_k):
+            print(f'j: {j}, sample_predict_descent_idx[j]: {sample_predict_descent_idx[j]}')
             if np_sample_predict[sample_predict_descent_idx[j]] > threshold:
                 sample_predict_id_list.append(sample_predict_descent_idx[j])
 
@@ -134,9 +135,6 @@ def evaluate(epoch_predicts, epoch_labels, id2label, threshold=0.5, top_k=None, 
             assert label in id2label.keys(), print(label)
             sample_gold.append(id2label[label])
         epoch_gold_label.append(sample_gold)
-
-    print(epoch_labels)
-    print(epoch_predicts)
 
     mlb = MultiLabelBinarizer()
     y_true = mlb.fit_transform(epoch_gold_label)
