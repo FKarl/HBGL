@@ -56,19 +56,6 @@ def evaluate(epoch_predicts, epoch_labels, id2label, threshold=0.5, top_k=None, 
     total_predict_label_list = []
 
     for sample_predict, sample_gold in zip(epoch_predicts, epoch_gold):
-        # region TODO added
-        np_sample_predict = np.array(sample_predict, dtype=np.float32)
-        sample_predict_descent_idx = np.argsort(-np_sample_predict)
-        sample_predict_id_list = []
-        for j in range(len(sample_predict)):
-            if np_sample_predict[sample_predict_descent_idx[j]] > threshold:
-                sample_predict_id_list.append(sample_predict_descent_idx[j])
-
-        sample_predict_label_list = [id2label[i] for i in sample_predict_id_list]
-
-        total_predict_label_list.append(sample_predict_label_list)
-        # endregion
-
         if as_sample:
             sample_predict_id_list = sample_predict
         else:
@@ -80,6 +67,10 @@ def evaluate(epoch_predicts, epoch_labels, id2label, threshold=0.5, top_k=None, 
             for j in range(top_k):
                 if np_sample_predict[sample_predict_descent_idx[j]] > threshold:
                     sample_predict_id_list.append(sample_predict_descent_idx[j])
+            # region TODO added
+            sample_predict_label_list = [id2label[i] for i in sample_predict_id_list]
+            total_predict_label_list.append(sample_predict_label_list)
+            # endregion
 
         for i in range(len(confusion_count_list)):
             for predict_id in sample_predict_id_list:
