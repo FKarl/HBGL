@@ -60,10 +60,7 @@ def evaluate(epoch_predicts, epoch_labels, id2label, threshold=0.5, top_k=None, 
         np_sample_predict = np.array(sample_predict, dtype=np.float32)
         sample_predict_descent_idx = np.argsort(-np_sample_predict)
         sample_predict_id_list = []
-        if top_k is None:
-            top_k = len(sample_predict)
-        for j in range(top_k):
-            print(f'j: {j}, sample_predict_descent_idx[j]: {sample_predict_descent_idx[j]}')
+        for j in range(len(sample_predict)):
             if np_sample_predict[sample_predict_descent_idx[j]] > threshold:
                 sample_predict_id_list.append(sample_predict_descent_idx[j])
 
