@@ -124,6 +124,11 @@ def evaluate(epoch_predicts, epoch_labels, id2label, threshold=0.5, top_k=None, 
             sample_gold.append(id2label[label])
         epoch_gold_label.append(sample_gold)
 
+    print('epoch_predicts:',epoch_predicts[:5])
+    print('epoch_labels:',epoch_labels[:5])
+    print('epoch_gold_label: ', epoch_gold_label[:5])
+    print('total_predict_label_list: ', total_predict_label_list[:5])
+
     mlb = MultiLabelBinarizer()
     y_true = mlb.fit_transform(epoch_gold_label)
     y_pred = mlb.transform(total_predict_label_list)
