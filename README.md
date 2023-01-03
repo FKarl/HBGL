@@ -1,5 +1,9 @@
 # Exploiting Global and Local Hierarchies for Hierarchical Text Classifications
 
+## What changed in this version?
+This fork of the original code is modified to support the following features:
+- evaluation with sklearn.metrics
+
 
 ## Preprocess
 
