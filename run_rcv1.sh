@@ -9,7 +9,7 @@ if [ ! -f  ./data/rcv1/rcv1_train_all.json ] || [ ! -f  ./data/rcv1/rcv1_val_all
   exit 0
 fi
 
-seed=42
+seed=$1
 OUTPUT_DIR=models/$RUN_NAME
 CACHE_DIR=.cache
 TRAIN_FILE=./data/rcv1/rcv1_train_all_generated_tl.json

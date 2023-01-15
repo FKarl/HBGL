@@ -9,7 +9,7 @@ if [ ! -f  ./data/nyt/nyt_train_all.json ] || [ ! -f  ./data/nyt/nyt_val_all.jso
   exit 0
 fi
 
-seed=42
+seed=$1
 OUTPUT_DIR=models/$RUN_NAME
 CACHE_DIR=.cache
 TRAIN_FILE=./data/nyt/nyt_train_all_generated_tl.json
